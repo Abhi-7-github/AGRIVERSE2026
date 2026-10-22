@@ -360,18 +360,18 @@ const Students = () => {
                   className="mt-1 w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-[#6B9080] focus:ring-4 focus:ring-[#6B9080]/15"
                 />
               </label>
-              <div className="sm:col-span-2 flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <div className="sm:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={closeStudentModal}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition-colors text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={studentSaving}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] disabled:opacity-60 text-white text-xs font-bold shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] disabled:opacity-60 text-white text-xs font-bold shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
                 >
                   <Save className="w-4 h-4" />{" "}
                   {studentSaving ? "Saving..." : "Save Student"}

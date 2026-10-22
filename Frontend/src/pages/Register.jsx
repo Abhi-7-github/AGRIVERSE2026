@@ -23,6 +23,7 @@ import {
   submitPayment,
   checkRegistrationStatus,
   getRegistrationStatus,
+  getMediaUrl,
 } from '../api/client';
 import {
   AgriGenLeaf,
@@ -558,9 +559,7 @@ const Register = () => {
       return list
         .map((item, idx) => {
           const rawUrl = typeof item === 'string' ? item : item.url;
-          const fullUrl = rawUrl
-            ? (rawUrl.startsWith('http') ? rawUrl : `http://localhost:5000${rawUrl}`)
-            : null;
+          const fullUrl = rawUrl ? getMediaUrl(rawUrl) : null;
           return {
             id: item.id || item._id || idx,
             title: item.title || `UPI QR ${idx + 1}`,
@@ -573,9 +572,9 @@ const Register = () => {
     // Fallback to legacy single QR
     const rawSingle = latestQrCode || eventData?.qrCode;
     const singleUrl = typeof rawSingle === 'string'
-      ? rawSingle
+      ? getMediaUrl(rawSingle)
       : rawSingle?.url
-        ? (rawSingle.url.startsWith('http') ? rawSingle.url : `http://localhost:5000${rawSingle.url}`)
+        ? getMediaUrl(rawSingle.url)
         : null;
     if (singleUrl) {
       return [

@@ -75,11 +75,15 @@ export const getCachedEventSettings = async (force = false) => {
   return cachedSettings;
 };
 
+// In-memory mutex lock for in-flight register numbers to prevent concurrency race conditions
+const activeRegistrationLocks = new Set();
+
 // @desc    Submit new solo participant registration (paymentStatus = UNPAID, verificationStatus = PENDING)
 // @route   POST /api/v1/registrations/register or /create
 // @access  Public
 export const createRegistration = async (req, res, next) => {
   let slotClaimed = false;
+  let lockKey = null;
   try {
     const {
       fullName,
@@ -113,15 +117,25 @@ export const createRegistration = async (req, res, next) => {
       }
     }
 
-    const cleanRegNo = registerNumber.trim().toUpperCase();
-    const cleanEmail = email ? email.trim().toLowerCase() : "";
-    const cleanFullName = fullName.trim();
-    const cleanPhone = phone && phone.trim() ? phone.trim() : "N/A";
-    const cleanDept = department.trim();
-    const cleanSection = section.trim().toUpperCase();
-    const cleanYear = year.trim();
-    const cleanGender = gender.trim();
+    const cleanRegNo = String(registerNumber).trim().toUpperCase();
+    const cleanEmail = email ? String(email).trim().toLowerCase() : "";
+    const cleanFullName = String(fullName).trim();
+    const cleanPhone = phone && String(phone).trim() ? String(phone).trim() : "N/A";
+    const cleanDept = String(department).trim();
+    const cleanSection = String(section).trim().toUpperCase();
+    const cleanYear = String(year).trim();
+    const cleanGender = String(gender).trim();
     const cleanResidency = (residency || "Dayscholar").trim();
+
+    // Acquire concurrency lock on Register Number
+    if (activeRegistrationLocks.has(cleanRegNo)) {
+      return res.status(409).json({
+        success: false,
+        message: "Registration for this Register Number is already in progress. Please wait a moment.",
+      });
+    }
+    activeRegistrationLocks.add(cleanRegNo);
+    lockKey = cleanRegNo;
 
     // 1. Fast Single-Query Duplicate Check on Register Number
     const existing = await Registration.findOne({
@@ -252,6 +266,10 @@ export const createRegistration = async (req, res, next) => {
       });
     }
     next(error);
+  } finally {
+    if (lockKey) {
+      activeRegistrationLocks.delete(lockKey);
+    }
   }
 };
 

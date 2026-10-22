@@ -7,16 +7,23 @@ import path from 'path';
 let isConfigured = false;
 
 export const isCloudinaryConfigured = () => {
+  const name = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const key = process.env.CLOUDINARY_API_KEY?.trim();
+  const secret = process.env.CLOUDINARY_API_SECRET?.trim();
+
   if (
-    process.env.CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
+    name &&
+    key &&
+    secret &&
+    !name.includes("your_cloudinary") &&
+    !key.includes("your_cloudinary") &&
+    !secret.includes("your_cloudinary")
   ) {
     if (!isConfigured) {
       cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
+        cloud_name: name,
+        api_key: key,
+        api_secret: secret,
       });
       isConfigured = true;
       console.log('[Cloudinary] Configured successfully.');
@@ -95,15 +102,21 @@ export const deleteStorageImage = async (publicId) => {
       console.warn('[Cloudinary] Delete error:', err.message);
     }
   } else if (publicId.startsWith('local_')) {
-    const filename = publicId.replace('local_', '');
-    // Scan uploads directory to remove file if exists
+    const rawFilename = publicId.replace('local_', '');
+    const filename = path.basename(rawFilename).replace(/[^a-zA-Z0-9._-]/g, '');
+    if (!filename) return;
+
     try {
       const uploadsDir = path.resolve('public/uploads');
-      const files = fs.readdirSync(uploadsDir, { recursive: true });
-      for (const file of files) {
-        if (typeof file === 'string' && file.endsWith(filename)) {
-          const fullPath = path.join(uploadsDir, file);
-          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir, { recursive: true });
+        for (const file of files) {
+          if (typeof file === 'string' && path.basename(file) === filename) {
+            const fullPath = path.resolve(uploadsDir, file);
+            if (fullPath.startsWith(uploadsDir) && fs.existsSync(fullPath)) {
+              fs.unlinkSync(fullPath);
+            }
+          }
         }
       }
     } catch (e) {

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'super_secret_event_jwt_key_987654321', {
@@ -29,13 +30,16 @@ export const adminLogin = async (req, res, next) => {
     }
 
     const { username: envUsername, email: envEmail, password: envPassword } = getEnvAdminCredentials();
-    const cleanIdentifier = emailOrUsername.trim().toLowerCase();
+    const cleanIdentifier = String(emailOrUsername).trim().toLowerCase();
 
     const isIdentifierMatch =
       cleanIdentifier === envEmail ||
       cleanIdentifier === envUsername.toLowerCase();
 
-    const isPasswordMatch = password === envPassword;
+    // Constant-time password comparison to prevent timing disclosure attacks
+    const bufferUser = crypto.createHash('sha256').update(String(password)).digest();
+    const bufferEnv = crypto.createHash('sha256').update(String(envPassword)).digest();
+    const isPasswordMatch = crypto.timingSafeEqual(bufferUser, bufferEnv);
 
     if (!isIdentifierMatch || !isPasswordMatch) {
       return res.status(401).json({

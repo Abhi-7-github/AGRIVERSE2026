@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { X, ZoomIn, ZoomOut, Download, ExternalLink } from 'lucide-react';
+import { getMediaUrl } from '../api/client';
 
 const ImageViewerModal = ({ isOpen, imageUrl, title = 'Payment Screenshot Proof', onClose }) => {
   const [zoom, setZoom] = useState(1);
 
   if (!isOpen || !imageUrl) return null;
 
-  // Format image URL if local
-  const resolvedUrl = imageUrl.startsWith('http')
-    ? imageUrl
-    : `http://localhost:5000${imageUrl}`;
+  // Format image URL dynamically
+  const resolvedUrl = getMediaUrl(imageUrl);
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
@@ -76,11 +75,11 @@ const ImageViewerModal = ({ isOpen, imageUrl, title = 'Payment Screenshot Proof'
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-500">
-          <span>Click image or zoom controls to inspect transaction reference details</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-500">
+          <span className="text-center sm:text-left">Pinch or click image / zoom controls to inspect details</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors"
+            className="w-full sm:w-auto px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors cursor-pointer"
           >
             Close Viewer
           </button>

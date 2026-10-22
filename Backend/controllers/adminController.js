@@ -26,6 +26,9 @@ const normalizeStatusForResponse = (registration) => {
   return data;
 };
 
+// Helper to escape user input before regex compilation to prevent ReDoS attacks
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // @desc    Get Admin Dashboard Statistics
 // @route   GET /api/v1/admin/dashboard
 // @access  Private (Admin)
@@ -118,7 +121,7 @@ export const getRegistrations = async (req, res, next) => {
 
     // Filter by payment or verification status.
     if (status && status !== "ALL") {
-      const normalizedStatus = status.trim().toUpperCase();
+      const normalizedStatus = escapeRegex(status.trim().toUpperCase());
       if (["PAID", "UNPAID"].includes(normalizedStatus)) {
         filters.push({
           paymentStatus: { $regex: new RegExp(`^${normalizedStatus}$`, "i") },
@@ -143,7 +146,7 @@ export const getRegistrations = async (req, res, next) => {
 
     // Search filter across solo participant fields
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
+      const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
       filters.push({
         $or: [
           { fullName: searchRegex },
@@ -564,12 +567,20 @@ export const updateAdminSettings = async (req, res, next) => {
 // @access  Private (Admin)
 export const uploadQRCode = async (req, res, next) => {
   try {
-    const incomingFiles =
-      req.files && Array.isArray(req.files) && req.files.length > 0
-        ? req.files
-        : req.file && req.file.buffer
-          ? [req.file]
-          : [];
+    let incomingFiles = [];
+    if (req.files) {
+      if (Array.isArray(req.files)) {
+        incomingFiles = req.files;
+      } else if (typeof req.files === "object") {
+        incomingFiles = [
+          ...(req.files.qrCode || []),
+          ...(req.files.qrImage || []),
+          ...(req.files.image || []),
+        ];
+      }
+    } else if (req.file && req.file.buffer) {
+      incomingFiles = [req.file];
+    }
 
     if (incomingFiles.length === 0) {
       return res.status(400).json({

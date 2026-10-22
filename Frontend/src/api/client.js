@@ -23,6 +23,24 @@ export const getNextApiBaseUrl = () => {
   return url;
 };
 
+// Dynamic helper to resolve absolute URLs for local uploads and cloud media
+export const getMediaUrl = (pathOrUrl) => {
+  if (!pathOrUrl) return "";
+  const s = String(pathOrUrl).trim();
+  if (
+    s.startsWith("http://") ||
+    s.startsWith("https://") ||
+    s.startsWith("data:") ||
+    s.startsWith("blob:")
+  ) {
+    return s;
+  }
+  const primaryEndpoint = API_ENDPOINTS[0] || "http://localhost:5050/api/v1";
+  const serverBase = primaryEndpoint.replace(/\/api\/v1\/?$/, "");
+  const cleanPath = s.startsWith("/") ? s : `/${s}`;
+  return `${serverBase}${cleanPath}`;
+};
+
 const api = axios.create({
   baseURL: API_ENDPOINTS[0],
   timeout: 30000, // 30-second timeout to prevent infinite button loading freezes
@@ -217,20 +235,33 @@ export const updateAdminSettings = async (data) => {
 };
 
 export const uploadQRCode = async (fileOrFiles, title = "", upiId = "") => {
-  const formData = new FormData();
-  if (Array.isArray(fileOrFiles)) {
-    for (const f of fileOrFiles) {
-      formData.append("qrCode", f);
+  let formData;
+  if (fileOrFiles instanceof FormData) {
+    formData = fileOrFiles;
+    // Ensure qrCode field exists if qrImage was used
+    if (!formData.has("qrCode") && formData.has("qrImage")) {
+      const img = formData.get("qrImage");
+      formData.append("qrCode", img);
     }
-  } else if (fileOrFiles instanceof FileList) {
-    for (let i = 0; i < fileOrFiles.length; i++) {
-      formData.append("qrCode", fileOrFiles[i]);
+    if (title && !formData.has("title")) formData.append("title", title);
+    if (upiId && !formData.has("upiId")) formData.append("upiId", upiId);
+  } else {
+    formData = new FormData();
+    if (Array.isArray(fileOrFiles)) {
+      for (const f of fileOrFiles) {
+        formData.append("qrCode", f);
+      }
+    } else if (fileOrFiles instanceof FileList) {
+      for (let i = 0; i < fileOrFiles.length; i++) {
+        formData.append("qrCode", fileOrFiles[i]);
+      }
+    } else if (fileOrFiles) {
+      formData.append("qrCode", fileOrFiles);
     }
-  } else if (fileOrFiles) {
-    formData.append("qrCode", fileOrFiles);
+    if (title) formData.append("title", title);
+    if (upiId) formData.append("upiId", upiId);
   }
-  if (title) formData.append("title", title);
-  if (upiId) formData.append("upiId", upiId);
+
   const response = await api.post("/admin/settings/qr", formData, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: 60000,

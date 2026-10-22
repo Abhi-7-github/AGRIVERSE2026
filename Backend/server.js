@@ -5,6 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import path from "path";
 import fs from "fs";
+import rateLimit from "express-rate-limit";
 
 import { connectDB } from "./config/db.js";
 import { seedInitialData } from "./services/seeder.js";
@@ -33,24 +34,82 @@ app.use(
 );
 
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173",
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
   "http://127.0.0.1:5173",
-];
+  "http://127.0.0.1:5174",
+].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, postman)
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive in dev, can restrict in strict prod
+
+      // Check explicit allowed origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // In non-production, permit any localhost or 127.0.0.1 port
+      if (
+        process.env.NODE_ENV !== "production" &&
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`CORS policy does not allow access from origin: ${origin}`),
+      );
     },
     credentials: true,
   }),
 );
+
+// General and route-specific Rate Limiting to prevent DoS & brute-force attacks
+const generalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again after 15 minutes.",
+  },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many login attempts from this IP, please try again after 15 minutes.",
+  },
+});
+
+const registrationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many registration attempts from this IP, please try again later.",
+  },
+});
+
+app.use("/api", generalApiLimiter);
+app.use("/api/v1/auth/admin/login", authLimiter);
+app.use("/api/v1/registrations/register", registrationLimiter);
+app.use("/api/v1/registrations/create", registrationLimiter);
+app.use("/api/v1/registrations/payment", registrationLimiter);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -123,10 +182,19 @@ if (!process.env.VERCEL) {
   server = app.listen(PORT, () => {
     console.log(`=============================================`);
     console.log(
-      `🚀 Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`,
+      `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`,
     );
-    console.log(`📡 API URL: http://localhost:${PORT}/api/v1`);
     console.log(`=============================================`);
+  });
+
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `\n❌ [Port Conflict]: Port ${PORT} is already in use by another running instance. Please close the other process or select a different PORT in .env.`,
+      );
+    } else {
+      console.error("\n❌ [Server Error]:", err.message);
+    }
   });
 }
 

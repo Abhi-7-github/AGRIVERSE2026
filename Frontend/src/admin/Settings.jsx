@@ -22,6 +22,7 @@ import {
   addWhatsAppGroup,
   updateWhatsAppGroup,
   deleteWhatsAppGroup,
+  getMediaUrl,
 } from "../api/client";
 import { useEvent } from "../context/EventContext";
 
@@ -140,6 +141,7 @@ const Settings = () => {
       for (let i = 0; i < qrFiles.length; i++) {
         const file = qrFiles[i];
         const formData = new FormData();
+        formData.append("qrCode", file);
         formData.append("qrImage", file);
 
         let fileTitle = qrTitle.trim();
@@ -314,19 +316,19 @@ const Settings = () => {
       {/* 1. Registration Limits & Fee Configuration */}
       <form
         onSubmit={handleGeneralSubmit}
-        className="w-full p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900"
+        className="w-full p-4 sm:p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900"
       >
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <SettingsIcon className="w-5 h-5 text-[#6B9080]" />
-            <h3 className="text-base font-bold text-slate-900 font-fraunces">
+            <SettingsIcon className="w-5 h-5 text-[#6B9080] shrink-0" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 font-fraunces">
               Registration Quota & Fee Parameters
             </h3>
           </div>
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] text-white font-bold text-xs shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] text-white font-bold text-xs shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
           >
             {saving ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
@@ -426,12 +428,12 @@ const Settings = () => {
       </form>
 
       {/* 2. Multi-Payment QR Code Management */}
-      <div className="w-full p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <QrCode className="w-5 h-5 text-[#6B9080]" />
+      <div className="w-full p-4 sm:p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pb-4 border-b border-slate-100">
+          <div className="flex items-start gap-2.5">
+            <QrCode className="w-5 h-5 text-[#6B9080] shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-base font-bold text-slate-900 font-fraunces">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 font-fraunces">
                 Payment QR Codes (Multi-Account & Failover)
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -439,7 +441,7 @@ const Settings = () => {
               </p>
             </div>
           </div>
-          <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold">
+          <span className="self-start sm:self-auto text-xs px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold shrink-0">
             {(settings.qrCodes || []).filter((q) => q.active !== false).length} Active QR{(settings.qrCodes || []).filter((q) => q.active !== false).length === 1 ? "" : "s"}
           </span>
         </div>
@@ -449,7 +451,7 @@ const Settings = () => {
           <span className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
             + Upload New Payment QR Code
           </span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] text-slate-600 font-semibold mb-1">
                 Account / QR Name
@@ -502,7 +504,7 @@ const Settings = () => {
             <button
               type="submit"
               disabled={qrFiles.length === 0 || qrUploading}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] disabled:opacity-40 text-white font-bold text-xs shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] disabled:opacity-40 text-white font-bold text-xs shadow-md shadow-[#6B9080]/20 transition-all cursor-pointer"
             >
               {qrUploading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -529,7 +531,7 @@ const Settings = () => {
           </div>
 
           {(settings.qrCodes && settings.qrCodes.length > 0) || settings.qrCode?.url ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {((settings.qrCodes && settings.qrCodes.length > 0)
                 ? settings.qrCodes
                 : [
@@ -541,9 +543,7 @@ const Settings = () => {
                     },
                   ]
               ).map((qr, idx) => {
-                const qrUrl = qr.url?.startsWith("http")
-                  ? qr.url
-                  : `http://localhost:5000${qr.url}`;
+                const qrUrl = getMediaUrl(qr.url);
                 return (
                   <div
                     key={qr._id || idx}
@@ -617,11 +617,11 @@ const Settings = () => {
       </div>
 
       {/* 3. WhatsApp Groups Management */}
-      <div className="w-full p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900">
-        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-          <MessageCircle className="w-5 h-5 text-[#25D366]" />
+      <div className="w-full p-4 sm:p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6 text-slate-900">
+        <div className="flex items-start sm:items-center gap-2.5 pb-4 border-b border-slate-100">
+          <MessageCircle className="w-5 h-5 text-[#25D366] shrink-0 mt-0.5 sm:mt-0" />
           <div>
-            <h3 className="text-base font-bold text-slate-900 font-fraunces">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 font-fraunces">
               Official Participant WhatsApp Groups
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -644,8 +644,8 @@ const Settings = () => {
                 key={group._id}
                 className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
               >
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-slate-900 text-sm">
                       {group.name}
                     </span>
@@ -663,14 +663,14 @@ const Settings = () => {
                     href={group.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[#2D5A46] hover:underline inline-flex items-center gap-1 mt-1 text-[11px] font-mono"
+                    className="text-[#2D5A46] hover:underline inline-flex items-center gap-1 mt-1 text-[11px] font-mono break-all"
                   >
-                    <span>{group.url}</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <span className="truncate max-w-[240px] sm:max-w-none">{group.url}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0" />
                   </a>
                 </div>
 
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
                   <button
                     type="button"
                     onClick={() => handleToggleGroup(group)}
@@ -729,7 +729,7 @@ const Settings = () => {
           <button
             type="submit"
             disabled={groupLoading}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] text-white text-xs font-bold shadow-md shadow-[#6B9080]/20 transition-colors cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#6B9080] hover:bg-[#587B6C] text-white text-xs font-bold shadow-md shadow-[#6B9080]/20 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add WhatsApp Channel</span>

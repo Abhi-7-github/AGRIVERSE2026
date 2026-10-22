@@ -25,7 +25,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { lookupTeam, submitPayment } from "../api/client";
+import { lookupTeam, submitPayment, getMediaUrl } from "../api/client";
 import { useEvent } from "../context/EventContext";
 
 const TeamPayment = () => {
@@ -267,9 +267,7 @@ const TeamPayment = () => {
       return list
         .map((item, idx) => {
           const rawUrl = typeof item === "string" ? item : item.url;
-          const fullUrl = rawUrl
-            ? (rawUrl.startsWith("http") ? rawUrl : `http://localhost:5000${rawUrl}`)
-            : null;
+          const fullUrl = rawUrl ? getMediaUrl(rawUrl) : null;
           return {
             id: item.id || item._id || idx,
             title: item.title || `UPI QR ${idx + 1}`,
@@ -281,9 +279,9 @@ const TeamPayment = () => {
     }
     const rawSingle = eventData?.qrCode;
     const singleUrl = typeof rawSingle === "string"
-      ? rawSingle
+      ? getMediaUrl(rawSingle)
       : rawSingle?.url
-        ? (rawSingle.url.startsWith("http") ? rawSingle.url : `http://localhost:5000${rawSingle.url}`)
+        ? getMediaUrl(rawSingle.url)
         : null;
     if (singleUrl) {
       return [

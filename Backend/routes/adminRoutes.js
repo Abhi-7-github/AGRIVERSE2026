@@ -46,7 +46,11 @@ router.get("/settings", getAdminSettings);
 router.patch("/settings", updateAdminSettings);
 router.post(
   "/settings/qr",
-  upload.array("qrCode", 10),
+  upload.fields([
+    { name: "qrCode", maxCount: 10 },
+    { name: "qrImage", maxCount: 10 },
+    { name: "image", maxCount: 10 },
+  ]),
   handleUploadError,
   uploadQRCode,
 );

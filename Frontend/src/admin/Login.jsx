@@ -55,7 +55,7 @@ const Login = () => {
         </Link>
 
         {/* Login Box */}
-        <div className="p-8 sm:p-9 rounded-3xl bg-white border border-slate-200/90 shadow-2xl text-slate-900">
+        <div className="p-6 sm:p-9 rounded-3xl bg-white border border-slate-200/90 shadow-2xl text-slate-900">
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-black border border-slate-200 overflow-hidden flex items-center justify-center mx-auto mb-4 p-1 shadow-lg shadow-black/10">
               <img
