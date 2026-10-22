@@ -254,7 +254,7 @@ export const createRegistration = async (req, res, next) => {
   } catch (error) {
     if (slotClaimed) {
       await EventSettings.updateOne(
-        {},
+        { currentRegistrations: { $gt: 0 } },
         { $inc: { currentRegistrations: -1 } },
       ).catch(() => { });
     }

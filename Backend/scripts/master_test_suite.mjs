@@ -14,8 +14,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
 
 const defaultTargets = [
-  "https://agrigen-45xt.onrender.com",
-  "https://newform-cb.onrender.com",
+  "https://agriverse2026.onrender.com",
 ];
 let rawTargets = process.env.API_BASE || process.env.TARGET_URL || defaultTargets.join(",");
 for (let i = 0; i < process.argv.length; i++) {

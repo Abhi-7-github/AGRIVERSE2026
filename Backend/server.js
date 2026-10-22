@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
+import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 import rateLimit from "express-rate-limit";
@@ -25,6 +26,9 @@ connectDB()
   });
 
 const app = express();
+
+// Enable reverse proxy support for Render / Cloudflare client IP resolution
+app.set("trust proxy", 1);
 
 // Security and utility middleware
 app.use(
@@ -71,12 +75,34 @@ app.use(
   }),
 );
 
+// Secure timing-safe test-bypass validator for high-concurrency load testing
+const isSecureLoadTestBypass = (req) => {
+  const secretToken = process.env.LOAD_TEST_BYPASS_TOKEN;
+  // Require explicit high-entropy token of at least 16 chars; fails safe in prod if unset
+  if (!secretToken || typeof secretToken !== "string" || secretToken.trim().length < 16) {
+    return false;
+  }
+  const clientToken =
+    req.headers["x-load-test-bypass-token"] ||
+    req.headers["x-test-bypass-token"];
+  if (!clientToken || typeof clientToken !== "string") {
+    return false;
+  }
+  const secretBuf = Buffer.from(secretToken.trim());
+  const clientBuf = Buffer.from(clientToken.trim());
+  if (secretBuf.length !== clientBuf.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(secretBuf, clientBuf);
+};
+
 // General and route-specific Rate Limiting to prevent DoS & brute-force attacks
 const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 5000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => isSecureLoadTestBypass(req) || process.env.NODE_ENV === "test",
   message: {
     success: false,
     message: "Too many requests from this IP, please try again after 15 minutes.",
@@ -85,7 +111,7 @@ const generalApiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -96,9 +122,10 @@ const authLimiter = rateLimit({
 
 const registrationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 60,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => isSecureLoadTestBypass(req) || process.env.NODE_ENV === "test",
   message: {
     success: false,
     message: "Too many registration attempts from this IP, please try again later.",
