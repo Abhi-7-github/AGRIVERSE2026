@@ -13,9 +13,9 @@ dotenv.config();
 
 // CLI argument parsing
 const args = process.argv.slice(2);
-let targetUrl = process.env.TARGET_URL || "http://localhost:5050";
+let targetUrl = process.env.TARGET_URL || "https://agriverse2026.onrender.com";
 let count = 101;
-let autoClean = true; // Clean test records by default to protect DB hygiene
+let autoClean = false; // Preserves registrations in MongoDB by default so user can inspect them
 let runTwoPhase = false;
 
 for (let i = 0; i < args.length; i++) {
@@ -239,6 +239,11 @@ async function main() {
         const currentTotal = await Registration.countDocuments();
         await EventSettings.updateOne({}, { $set: { currentRegistrations: currentTotal } });
         console.log(`✅ Cleaned up ${del.deletedCount} test records. Database safely restored to ${currentTotal} records.`);
+      } else if (run.successful.length > 0) {
+        const totalSaved = await Registration.countDocuments();
+        console.log(`\n💾 SUCCESS: ${run.successful.length} registrations were PERMANENTLY SAVED in MongoDB Atlas!`);
+        console.log(`   Total registered participants in database: ${totalSaved}`);
+        console.log(`   You can now view all records in your Admin Dashboard (/admin/registrations) or MongoDB Atlas.`);
       }
     }
   } finally {
@@ -251,21 +256,20 @@ async function main() {
       }
     }
 
-    // Restore original event settings
-    if (originalSettings) {
-      const finalCount = await Registration.countDocuments();
-      await EventSettings.updateOne(
-        {},
-        {
-          $set: {
-            registrationLimit: originalSettings.registrationLimit,
-            registrationOpen: originalSettings.registrationOpen,
-            currentRegistrations: finalCount,
-          },
+    // Synchronize event settings counter with total confirmed documents
+    const finalCount = await Registration.countDocuments();
+    const limit = originalSettings?.registrationLimit || 100;
+    await EventSettings.updateOne(
+      {},
+      {
+        $set: {
+          registrationLimit: limit,
+          registrationOpen: finalCount < limit,
+          currentRegistrations: finalCount,
         },
-      );
-      console.log(`\n🔄 Restored original event settings (Limit: ${originalSettings.registrationLimit}, Open: ${originalSettings.registrationOpen}, Registrations: ${finalCount}).`);
-    }
+      },
+    );
+    console.log(`\n📊 Live Database Status: ${finalCount} records saved in MongoDB | Event Capacity: ${limit} | Status: ${finalCount < limit ? "🟢 OPEN" : "🔴 CLOSED"}`);
     await mongoose.disconnect();
   }
 
