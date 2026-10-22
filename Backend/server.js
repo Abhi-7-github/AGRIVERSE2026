@@ -37,14 +37,19 @@ app.use(
   }),
 );
 
+const configuredClients = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((u) => u.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.CLIENT_URL,
+  ...configuredClients,
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
-].filter(Boolean);
+];
 
 app.use(
   cors({
@@ -59,11 +64,13 @@ app.use(
         return callback(null, true);
       }
 
-      // In non-production, permit any localhost or 127.0.0.1 port
-      if (
-        process.env.NODE_ENV !== "production" &&
-        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-      ) {
+      // Allow any localhost/127.0.0.1 port
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow standard frontend deployments on Vercel, Netlify, and Render
+      if (/^https:\/\/[\w.-]+\.(vercel\.app|netlify\.app|onrender\.com)$/.test(origin)) {
         return callback(null, true);
       }
 
