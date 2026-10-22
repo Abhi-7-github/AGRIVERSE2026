@@ -13,7 +13,7 @@ const Footer = () => {
   return (
     <footer className="w-full bg-white text-slate-900 border-t border-slate-200 py-6 px-4 sm:px-8 mt-16 shadow-lg">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-        
+
         {/* Brand Title with KARE Tech Logo */}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-black border border-slate-200 overflow-hidden flex items-center justify-center p-0.5 shadow-sm">

@@ -29,7 +29,7 @@ const Navbar = () => {
       // Scrolling downwards -> move navbar upwards (hide)
       if (currentScrollY > lastScrollY.current + 5) {
         setIsVisible(false);
-      } 
+      }
       // Scrolling upwards -> bring navbar back
       else if (currentScrollY < lastScrollY.current - 5) {
         setIsVisible(true);
@@ -47,15 +47,14 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-3 sm:top-5 left-0 right-0 z-50 px-3 sm:px-6 max-w-6xl mx-auto transition-all duration-300 ease-in-out ${
-        shouldShow
+      className={`fixed top-3 sm:top-5 left-0 right-0 z-50 px-3 sm:px-6 max-w-6xl mx-auto transition-all duration-300 ease-in-out ${shouldShow
           ? 'translate-y-0 opacity-100'
           : '-translate-y-28 opacity-0 pointer-events-none'
-      }`}
+        }`}
     >
       <div className="bg-white/95 text-slate-900 border border-slate-200/90 rounded-xl shadow-lg px-4 sm:px-8 py-3 backdrop-blur-md transition-all duration-300">
         <div className="flex items-center justify-between">
-          
+
           {/* Left: AgriVerse Brand Logo & Title */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
             {/* KARE Tech Brand Logo */}
@@ -86,11 +85,10 @@ const Navbar = () => {
             {/* Home */}
             <Link
               to="/"
-              className={`pb-1 transition-all ${
-                isActive('/')
+              className={`pb-1 transition-all ${isActive('/')
                   ? 'text-[#6B9080] font-bold border-b-2 border-[#6B9080]'
                   : 'text-slate-600 hover:text-slate-900 transition-colors'
-              }`}
+                }`}
             >
               <span>Home</span>
             </Link>
@@ -98,11 +96,10 @@ const Navbar = () => {
             {/* Participant Payment */}
             <Link
               to="/team-payment"
-              className={`pb-1 transition-all ${
-                isActive('/team-payment')
+              className={`pb-1 transition-all ${isActive('/team-payment')
                   ? 'text-[#6B9080] font-bold border-b-2 border-[#6B9080]'
                   : 'text-slate-600 hover:text-slate-900 transition-colors'
-              }`}
+                }`}
             >
               <span>Participant Payment</span>
             </Link>
@@ -110,11 +107,10 @@ const Navbar = () => {
             {/* Check Status */}
             <Link
               to="/status"
-              className={`pb-1 transition-all ${
-                isActive('/status')
+              className={`pb-1 transition-all ${isActive('/status')
                   ? 'text-[#6B9080] font-bold border-b-2 border-[#6B9080]'
                   : 'text-slate-600 hover:text-slate-900 transition-colors'
-              }`}
+                }`}
             >
               <span>Check Status</span>
             </Link>
