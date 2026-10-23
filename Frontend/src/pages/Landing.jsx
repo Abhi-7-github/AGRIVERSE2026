@@ -117,7 +117,7 @@ const Landing = () => {
                   <span>📍</span> VENUE
                 </span>
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 mt-1 font-serif">
-                  Admin Block
+                  Dr.V.Vasudevan
                 </h4>
                 <p className="text-xs text-slate-500 mt-0.5 font-sans">
                   Seminar Hall
